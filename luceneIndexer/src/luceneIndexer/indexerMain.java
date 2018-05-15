@@ -23,7 +23,7 @@ public class indexerMain {
 	public static void main(String[] args) {
 		IndexWriter w = getIndexWriter("");
 		for(int i = 0; i < 120000; ++i) {
-			System.out.println(i);
+			System.out.print(i);
 			File f = new File(args[0] + i + ".html");
 			try {
 				w.addDocument(getDocument(f));
