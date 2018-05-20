@@ -90,14 +90,14 @@ public class indexerMain {
         // QueryParser parser = new QueryParser("content", analyzer);
         // Query query = parser.parse("(title:ucr)^1.0 (content:ucr)^0.5");
         System.out.println(query.toString());
-        int topHitCount = 100;
+        int topHitCount = 10;
         ScoreDoc[] hits = indexSearcher.search(query, topHitCount).scoreDocs;
 
         // Iterate through the results:
         for (int rank = 0; rank < hits.length; ++rank) {
             Document hitDoc = indexSearcher.doc(hits[rank].doc);
             System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " +
-                               hitDoc.get("title") + " - " + hitDoc.get("body"));
+                               hitDoc.get("title") + " - " + hitDoc.get("url") + " - " + hitDoc.get("body"));
             // System.out.println(indexSearcher.explain(query, hits[rank].doc));
         }
         indexReader.close();
