@@ -4,6 +4,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.Directory;
@@ -91,8 +92,9 @@ public class indexerMain {
         // Query query = parser.parse("(title:ucr)^1.0 (content:ucr)^0.5");
         System.out.println(query.toString());
         int topHitCount = 10;
+        LRUQueryCache queryCache = new LRUQueryCache(1000, 1073741824);
+        indexSearcher.setQueryCache(queryCache);
         ScoreDoc[] hits = indexSearcher.search(query, topHitCount).scoreDocs;
-
         // Iterate through the results:
         for (int rank = 0; rank < hits.length; ++rank) {
             Document hitDoc = indexSearcher.doc(hits[rank].doc);
