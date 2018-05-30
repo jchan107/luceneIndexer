@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.io.BufferedReader;
 
@@ -35,14 +36,15 @@ import java.io.BufferedReader;
 public class indexerMain {
 	
 	public static void main(String[] args) throws IOException, ParseException {
-
+		
+		HashSet<String> addedUrls= new HashSet<String>();
         Analyzer analyzer = new StandardAnalyzer();
         // Store the index in memory:
-        Directory directory = new RAMDirectory();
+        //Directory directory = new RAMDirectory();
         // To store an index on disk, use this instead:
-        //String basePath = new File("").getAbsolutePath();
-        //basePath = basePath + "\\indexFile";
-        //Directory directory = FSDirectory.open(Paths.get(basePath));
+        String basePath = new File("").getAbsolutePath();
+        basePath = basePath + "\\indexFile";
+        Directory directory = FSDirectory.open(Paths.get(basePath));
         
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
 		IndexWriter w = new IndexWriter(directory, config);
@@ -55,18 +57,40 @@ public class indexerMain {
 			int cnt = 0;// just to check indexing on smaller number of htmls
 			while ((line = bufferedReader.readLine()) != null && cnt < 5000) {
 				String[] indexANDUrl = line.split("\\|");
+				String index = indexANDUrl[0];
+				String url = indexANDUrl[1];
+				
+				//Don't know if the following if statement is necessary but it just strips the '/' character from url
+//				if(url.charAt(url.length()-1) == '/')
+//				{
+//					System.out.println("Boooooooooooooooooooooo" + url);
+//					url = url.substring(0, url.length()-1);
+//					System.out.println("YEAAAAAAAAAAA" + url);
+//				}
+				
+				//Checks if the path leads to a pdf
+				if(url.substring(url.length()-4,url.length()).equals(".pdf"))
+				{
+					continue;
+				}
+				
 				System.out.println(indexANDUrl[0]);
 				System.out.println(indexANDUrl[1]);
-				File htmlF = new File(args[0] + "\\" + indexANDUrl[0] + ".html");
+				File htmlF = new File(args[0] + "\\" + index + ".html");
 				org.jsoup.nodes.Document doc = Jsoup.parse(htmlF, "UTF-8", "");
 				String title = doc.getElementsByTag("title").text();
-				System.out.println(title);
+//				System.out.println(title);
 				String body = doc.getElementsByTag("body").text();
-				System.out.println(body);
-				System.out.println();
+//				System.out.println(body);
+//				System.out.println();
 				
-				Document d = getDocument(title,body,indexANDUrl[1]);
-				w.addDocument(d);
+				//
+				if(!addedUrls.contains(url))
+				{
+					Document d = getDocument(title,body,url);
+					w.addDocument(d);
+					addedUrls.add(url);
+				}
 				cnt++;
 			}
 			bufferedReader.close();
@@ -77,33 +101,33 @@ public class indexerMain {
 		}
 		
 		
-		//search Index
-		DirectoryReader indexReader = DirectoryReader.open(directory);
-        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-
-        String[] fields = {"title", "body"};
-        Map<String, Float> boosts = new HashMap<>();
-        boosts.put(fields[0], 1.0f);
-        boosts.put(fields[1], 0.5f);
-        MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
-        Query query = parser.parse("School");
-        // Query query = parser.parse("UCR discussion");
-        // QueryParser parser = new QueryParser("content", analyzer);
-        // Query query = parser.parse("(title:ucr)^1.0 (content:ucr)^0.5");
-        System.out.println(query.toString());
-        int topHitCount = 10;
-        LRUQueryCache queryCache = new LRUQueryCache(1000, 1073741824);
-        indexSearcher.setQueryCache(queryCache);
-        ScoreDoc[] hits = indexSearcher.search(query, topHitCount).scoreDocs;
-        // Iterate through the results:
-        for (int rank = 0; rank < hits.length; ++rank) {
-            Document hitDoc = indexSearcher.doc(hits[rank].doc);
-            System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " +
-                               hitDoc.get("title") + " - " + hitDoc.get("url") + " - " + hitDoc.get("body"));
-            // System.out.println(indexSearcher.explain(query, hits[rank].doc));
-        }
-        indexReader.close();
-        directory.close();
+//		//search Index
+//		DirectoryReader indexReader = DirectoryReader.open(directory);
+//        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+//
+//        String[] fields = {"title", "body"};
+//        Map<String, Float> boosts = new HashMap<>();
+//        boosts.put(fields[0], 1.0f);
+//        boosts.put(fields[1], 0.5f);
+//        MultiFieldQueryParser parser = new MultiFieldQueryParser(fields, analyzer, boosts);
+//        Query query = parser.parse("School");
+//        // Query query = parser.parse("UCR discussion");
+//        // QueryParser parser = new QueryParser("content", analyzer);
+//        // Query query = parser.parse("(title:ucr)^1.0 (content:ucr)^0.5");
+//        System.out.println(query.toString());
+//        int topHitCount = 10;
+//        LRUQueryCache queryCache = new LRUQueryCache(1000, 1073741824);
+//        indexSearcher.setQueryCache(queryCache);
+//        ScoreDoc[] hits = indexSearcher.search(query, topHitCount).scoreDocs;
+//        // Iterate through the results:
+//        for (int rank = 0; rank < hits.length; ++rank) {
+//            Document hitDoc = indexSearcher.doc(hits[rank].doc);
+//            System.out.println((rank + 1) + " (score:" + hits[rank].score + ") --> " +
+//                               hitDoc.get("title") + " - " + hitDoc.get("url") + " - " + hitDoc.get("body"));
+//            // System.out.println(indexSearcher.explain(query, hits[rank].doc));
+//        }
+//        indexReader.close();
+//        directory.close();
     }
 
 	static IndexWriter getIndexWriter(String dir) {
