@@ -42,16 +42,16 @@ public class indexerMain {
         // Store the index in memory:
         //Directory directory = new RAMDirectory();
         // To store an index on disk, use this instead:
-//        String basePath = new File("").getAbsolutePath();
-//        basePath = basePath + "\\indexFile";
-        String basePath = "D:\\index";
+        String basePath = new File("").getAbsolutePath();
+        basePath = basePath + File.separator + "indexFile";
+//        String basePath = "D:\\index";
         Directory directory = FSDirectory.open(Paths.get(basePath));
         
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
 		IndexWriter w = new IndexWriter(directory, config);
 		try
 		{
-			File txt = new File(args[0] + "\\\\index.txt");
+			File txt = new File(args[0] + File.separator + "index.txt");
 			FileReader fileReader = new FileReader(txt);
 			BufferedReader bufferedReader = new BufferedReader(fileReader);
 			String line;
@@ -92,7 +92,7 @@ public class indexerMain {
 				
 				System.out.println(index);
 				System.out.println(url);
-				File htmlF = new File(args[0] + "\\" + index + ".html");
+				File htmlF = new File(args[0] + File.separator + index + ".html");
 				org.jsoup.nodes.Document doc = Jsoup.parse(htmlF, "UTF-8", "");
 				String title = doc.getElementsByTag("title").text();
 				System.out.println(title);
